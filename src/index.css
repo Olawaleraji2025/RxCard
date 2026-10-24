@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: 'Figtree', 'Segoe UI', sans-serif;
+  --font-serif: 'Newsreader', 'Georgia', serif;
+  --color-bg: #eaf1ef;
+  --color-surface: #ffffff;
+  --color-ink: #12302e;
+  --color-muted: #58706d;
+  --color-line: #cfdcd9;
+  --color-accent: #0f6b63;
+  --color-warn: #b86b12;
+  --color-ok: #1f7a45;
+  --color-bad: #b3362c;
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme inline {
+    --color-bg: #0d1717;
+    --color-surface: #132320;
+    --color-ink: #edf5f3;
+    --color-muted: #b7d0cc;
+    --color-line: #294642;
+    --color-accent: #71d2c6;
+    --color-warn: #f0ba73;
+    --color-ok: #71d299;
+    --color-bad: #f09993;
+  }
+}
+
+:root {
+  color: var(--color-ink);
+  background-color: var(--color-bg);
+  font-family: var(--font-sans);
+}
+
+html {
+  background: var(--color-bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+::selection {
+  background: rgba(15, 107, 99, 0.2);
+}
