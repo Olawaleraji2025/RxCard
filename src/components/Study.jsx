@@ -1,12 +1,15 @@
 import Button from './Button.jsx'
 import Panel from './Panel.jsx'
-import { isDue, isWeak } from '../lib/utils.js'
+import { filledFields, isDue, isWeak } from '../lib/utils.js'
+
+const countQuestions = (items) =>
+  items.reduce((sum, card) => sum + filledFields(card).length, 0)
 
 export default function Study({ cards, selection, onSelectionChange, onStart }) {
   const options = [
-    { id: 'due', label: 'Due today', count: cards.filter((card) => isDue(card)).length },
-    { id: 'weak', label: 'Needs work', count: cards.filter((card) => isWeak(card)).length },
-    { id: 'all', label: 'All', count: cards.length },
+    { id: 'due', label: 'Due today', count: countQuestions(cards.filter((card) => isDue(card))) },
+    { id: 'weak', label: 'Needs work', count: countQuestions(cards.filter((card) => isWeak(card))) },
+    { id: 'all', label: 'All', count: countQuestions(cards) },
   ]
 
   return (

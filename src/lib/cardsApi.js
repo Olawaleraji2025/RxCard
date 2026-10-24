@@ -105,7 +105,7 @@ export const updateCard = async (id, updates) => {
   const safeUpdates = {}
 
   for (const key of CARD_COLUMNS) {
-    if (key === 'id' || key === 'created_at' || key === 'updated_at') {
+    if (key === 'id') {
       continue
     }
 

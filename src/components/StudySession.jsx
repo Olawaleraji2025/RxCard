@@ -4,7 +4,7 @@ import { filledFields, isDue, isWeak, shuffle } from '../lib/utils.js'
 import Button from './Button.jsx'
 import Panel from './Panel.jsx'
 
-export default function StudySession({ cards, selection, kind, gradeCard, onHome }) {
+export default function StudySession({ cards, selection, kind, onHome }) {
   const [sessionCards, setSessionCards] = useState([])
   const [index, setIndex] = useState(0)
   const [score, setScore] = useState(0)
@@ -13,7 +13,6 @@ export default function StudySession({ cards, selection, kind, gradeCard, onHome
   const [answer, setAnswer] = useState('')
   const [saveWarning, setSaveWarning] = useState(false)
   const [completed, setCompleted] = useState(false)
-  const [activeField, setActiveField] = useState(null)
 
   const filteredCards = useMemo(() => {
     if (selection === 'due') {
@@ -27,8 +26,18 @@ export default function StudySession({ cards, selection, kind, gradeCard, onHome
     return cards
   }, [cards, selection])
 
+  const totalQuestions = useMemo(
+    () => filteredCards.reduce((sum, card) => sum + filledFields(card).length, 0),
+    [filteredCards]
+  )
+
   useEffect(() => {
-    const nextCards = shuffle(filteredCards)
+    const nextCards = shuffle(
+      filteredCards.flatMap((card) =>
+        filledFields(card).map((field) => ({ card, field }))
+      )
+    )
+
     setSessionCards(nextCards)
     setIndex(0)
     setScore(0)
@@ -39,26 +48,11 @@ export default function StudySession({ cards, selection, kind, gradeCard, onHome
     setCompleted(false)
   }, [filteredCards])
 
-  useEffect(() => {
-    if (!sessionCards[index]) {
-      setActiveField(null)
-      return
-    }
-
-    const fields = filledFields(sessionCards[index])
-    if (!fields.length) {
-      setActiveField(null)
-      return
-    }
-
-    setActiveField(fields[Math.floor(Math.random() * fields.length)])
-  }, [index, sessionCards])
-
-  if (!filteredCards.length) {
+  if (!totalQuestions) {
     return (
       <Panel className="p-6 text-center">
-        <h3 className="font-serif text-2xl text-ink">No cards in this set</h3>
-        <p className="mt-2 text-sm text-muted">Try another selection or add a medication first.</p>
+        <h3 className="font-serif text-2xl text-ink">No questions in this set</h3>
+        <p className="mt-2 text-sm text-muted">Add a medication with at least one filled field, or choose another study set.</p>
         <div className="mt-4 flex justify-center">
           <Button variant="ghost" onClick={onHome}>Home</Button>
         </div>
@@ -66,12 +60,19 @@ export default function StudySession({ cards, selection, kind, gradeCard, onHome
     )
   }
 
-  const currentCard = sessionCards[index]
+  const currentEntry = sessionCards[index]
+  const currentCard = currentEntry?.card
+  const activeField = currentEntry?.field
   const currentFields = currentCard ? filledFields(currentCard) : []
   const progress = sessionCards.length ? ((index + (completed ? 1 : 0)) / sessionCards.length) * 100 : 0
 
   const resetSession = () => {
-    const nextCards = shuffle(filteredCards)
+    const nextCards = shuffle(
+      filteredCards.flatMap((card) =>
+        filledFields(card).map((field) => ({ card, field }))
+      )
+    )
+
     setSessionCards(nextCards)
     setIndex(0)
     setScore(0)
@@ -82,18 +83,20 @@ export default function StudySession({ cards, selection, kind, gradeCard, onHome
     setCompleted(false)
   }
 
-  const handleGrade = async (result) => {
-    if (!currentCard) {
+  const goToPrevious = () => {
+    if (index === 0) {
       return
     }
 
-    const saved = await gradeCard(currentCard.id, result)
-    if (!saved) {
-      setSaveWarning(true)
-    }
+    setIndex((previous) => previous - 1)
+    setFlipped(false)
+    setShowAnswer(false)
+    setAnswer('')
+  }
 
-    if (result === 'got') {
-      setScore((previous) => previous + 1)
+  const goToNext = () => {
+    if (!currentCard) {
+      return
     }
 
     const nextIndex = index + 1
@@ -113,7 +116,7 @@ export default function StudySession({ cards, selection, kind, gradeCard, onHome
       <Panel className="p-6">
         <h3 className="font-serif text-3xl text-ink">Session complete</h3>
         <p className="mt-3 text-sm text-muted">
-          You got {score} of {sessionCards.length} correct.
+          You completed {sessionCards.length} {kind === 'flashcards' ? 'flashcard' : 'quiz'} question{sessionCards.length === 1 ? '' : 's'}.
         </p>
 
         {saveWarning ? (
@@ -171,11 +174,11 @@ export default function StudySession({ cards, selection, kind, gradeCard, onHome
           )}
 
           <div className="flex flex-wrap gap-3">
-            <Button variant="bad" onClick={() => handleGrade('miss')}>
-              Missed it
+            <Button variant="ghost" onClick={goToPrevious} disabled={index === 0}>
+              Previous
             </Button>
-            <Button variant="ok" onClick={() => handleGrade('got')}>
-              Got it
+            <Button onClick={goToNext}>
+              {index === sessionCards.length - 1 ? 'Finish' : 'Next'}
             </Button>
           </div>
         </div>
@@ -211,11 +214,11 @@ export default function StudySession({ cards, selection, kind, gradeCard, onHome
 
           <div className="flex flex-wrap gap-3">
             <Button variant="ghost" onClick={() => setShowAnswer(true)}>Show answer</Button>
-            <Button variant="bad" onClick={() => handleGrade('miss')}>
-              Missed it
+            <Button variant="ghost" onClick={goToPrevious} disabled={index === 0}>
+              Previous
             </Button>
-            <Button variant="ok" onClick={() => handleGrade('got')}>
-              Got it
+            <Button onClick={goToNext}>
+              {index === sessionCards.length - 1 ? 'Finish' : 'Next'}
             </Button>
           </div>
         </div>
