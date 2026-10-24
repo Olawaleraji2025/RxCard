@@ -1,15 +1,40 @@
 import { useMemo, useState } from 'react'
 import Button from './Button.jsx'
 import CardForm from './CardForm.jsx'
-import ImportExport from './ImportExport.jsx'
 import Panel from './Panel.jsx'
 import { filledFields, isWeak } from '../lib/utils.js'
 
-export default function CardsPage({ cards, saving, onSave, onDelete, onImport, deletingId }) {
+export default function CardsPage({ cards, saving, onSave, onDelete, deletingId }) {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
+  const [search, setSearch] = useState('')
 
   const sortedCards = useMemo(() => [...cards].sort((a, b) => a.name.localeCompare(b.name)), [cards])
+
+  const filteredCards = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    if (!term) {
+      return sortedCards
+    }
+
+    return sortedCards.filter((card) => {
+      const haystack = [
+        card.name,
+        card.used,
+        card.dosage,
+        card.can,
+        card.cannot,
+        card.chemical_composition,
+        card.identification,
+        card.notes,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+
+      return haystack.includes(term)
+    })
+  }, [search, sortedCards])
 
   const openCreateForm = () => {
     setEditingCard(null)
@@ -57,15 +82,27 @@ export default function CardsPage({ cards, saving, onSave, onDelete, onImport, d
         />
       ) : null}
 
-      <ImportExport cards={cards} onImport={onImport} />
+      <Panel className="p-4">
+        <label htmlFor="card-search" className="mb-2 block text-sm font-medium text-ink">
+          Search medications
+        </label>
+        <input
+          id="card-search"
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search by name or details"
+          className="w-full rounded-xl border border-line bg-bg px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+        />
+      </Panel>
 
-      {sortedCards.length === 0 ? (
+      {filteredCards.length === 0 ? (
         <Panel className="p-6 text-center text-muted">
-          No cards have been added yet.
+          {search.trim() ? 'No medication matches your search.' : 'No cards have been added yet.'}
         </Panel>
       ) : (
         <div className="space-y-3">
-          {sortedCards.map((card) => {
+          {filteredCards.map((card) => {
             const filled = filledFields(card).length
             const weak = isWeak(card)
 

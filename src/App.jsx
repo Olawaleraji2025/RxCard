@@ -19,7 +19,6 @@ function App() {
     loadCards,
     saveCard,
     removeCard,
-    importCards,
     gradeCard,
   } = useCards()
 
@@ -55,14 +54,6 @@ function App() {
       window.alert('The medication could not be deleted. Please try again.')
     }
     return deleted
-  }
-
-  const handleImport = async (items) => {
-    const imported = await importCards(items)
-    if (!imported) {
-      window.alert('No new cards were imported. Check the JSON and try again.')
-    }
-    return imported
   }
 
   if (loading) {
@@ -105,7 +96,6 @@ function App() {
           saving={saving}
           onSave={handleSave}
           onDelete={handleDelete}
-          onImport={handleImport}
           deletingId={deletingId}
         />
       )
